@@ -36,3 +36,4 @@ Restaurant payment fraud data is tabular with well-defined features. Tree models
 - **LightGBM**: Similar performance to XGBoost but less mature ONNX export. Would reconsider if ONNX support improves.
 - **CatBoost**: Strong on categorical features but heavier inference. Not justified for our feature set.
 - **Rule engine only (no ML)**: Simpler but cannot capture complex feature interactions. We use the rule engine as primary for CP with ML in shadow mode, with a path to ML-primary once validated.
+
