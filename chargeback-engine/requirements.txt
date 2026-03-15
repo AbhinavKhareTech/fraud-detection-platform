@@ -1,0 +1,4 @@
+# Chargeback engine dependencies
+aiohttp>=3.9.0
+redis>=5.0.0
+psycopg2-binary>=2.9.0

@@ -1,0 +1,80 @@
+server:
+  port: 8080
+  tomcat:
+    threads:
+      max: 200        # Sized for peak dinner rush TPS
+      min-spare: 20
+
+spring:
+  application:
+    name: fraud-scoring-service
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 5000ms  # Feature store read timeout
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+
+# Fraud scoring configuration
+fraud:
+  thresholds:
+    cp-decline: 0.70     # CP transactions above this score are declined
+    cp-review: 0.40      # CP transactions between review and decline go to manual review
+    cnp-decline: 0.65    # CNP threshold is lower (higher base fraud rate)
+    cnp-review: 0.35
+  ml:
+    model-version: xgb-v1.0.0
+    model-path: models/fraud_model.onnx
+    cp-threshold: 0.7
+    cnp-threshold: 0.6
+
+# Resilience4j circuit breaker configuration
+# Tiered configuration matching DependencyTier classification
+resilience4j:
+  circuitbreaker:
+    instances:
+      # Tier 2: Feature store - degrade to defaults on failure
+      featureStore:
+        slidingWindowType: TIME_BASED
+        slidingWindowSize: 10          # 10-second window
+        failureRateThreshold: 50       # Open at 50% failure rate
+        waitDurationInOpenState: 5000  # Try again after 5 seconds
+        permittedNumberOfCallsInHalfOpenState: 10
+        slowCallDurationThreshold: 5   # 5ms is slow for Redis
+        slowCallRateThreshold: 80
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.data.redis.RedisConnectionFailureException
+      # Tier 3: Enrichment services - skip on failure
+      enrichment:
+        slidingWindowType: TIME_BASED
+        slidingWindowSize: 5
+        failureRateThreshold: 25
+        waitDurationInOpenState: 3000
+        permittedNumberOfCallsInHalfOpenState: 5
+
+# Actuator and metrics
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    tags:
+      application: fraud-scoring-service
+    export:
+      prometheus:
+        enabled: true
+
+# Logging
+logging:
+  level:
+    com.payments.fraud: DEBUG
+    io.github.resilience4j: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - txn=%X{transaction_id} %msg%n"

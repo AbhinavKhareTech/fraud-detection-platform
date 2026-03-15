@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  fraud-scoring-service:
+    runs-on: ubuntu-latest
+    name: Fraud Scoring Service (Java 21)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: Build and test
+        working-directory: fraud-scoring-service
+        run: mvn clean verify -B
+
+  feature-pipeline:
+    runs-on: ubuntu-latest
+    name: Feature Pipeline (Python)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        working-directory: feature-pipeline
+        run: pip install -r requirements.txt
+      - name: Run tests
+        working-directory: feature-pipeline
+        run: python tests/test_features.py
+
+  chargeback-engine:
+    runs-on: ubuntu-latest
+    name: Chargeback Engine (Python)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        working-directory: chargeback-engine
+        run: pip install -r requirements.txt
+      - name: Run smoke test
+        working-directory: chargeback-engine
+        run: python src/chargeback_orchestrator.py
