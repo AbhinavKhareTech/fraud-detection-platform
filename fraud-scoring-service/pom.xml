@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.4</version>
-        <relativeTo/>
-    </parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.x.x</version>
+    <relativePath/>   <!-- CORRECT -->
+</parent>
 
     <groupId>com.payments</groupId>
     <artifactId>fraud-scoring-service</artifactId>
